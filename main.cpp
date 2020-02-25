@@ -9,7 +9,7 @@ int main()
     printf("Maze size (odd number): ");
     scanf("%d", &mazeSize);
     float scaleRatio = (float)WINDOW_SIZE / mazeSize;
-    
+
     sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Mazes");
     Cell maze[mazeSize * mazeSize];
     
@@ -63,9 +63,8 @@ int main()
             
             if(isFinished)
             {
-                const char* outputName = "output.png";
-                mazeImage.saveToFile(outputName);
-                printf("Finished generating maze! Output: %s\n", outputName);
+                mazeImage.saveToFile("unsolved.png");
+                printf("Finished generating maze!\n");
             } 
             
             if(solution == nullptr && isFinished)
@@ -81,7 +80,9 @@ int main()
                 
                 // Create sprite from texture
                 mazeSprite = sf::Sprite(tex);
-                mazeSprite.scale(scaleRatio, scaleRatio);    
+                mazeSprite.scale(scaleRatio, scaleRatio); 
+                mazeImage.saveToFile("solved.png");
+                printf("Finished solving maze!\n");
             }
         }    
         

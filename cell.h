@@ -19,7 +19,7 @@ struct Cell
     }
 };
 
-void GenerateMaze(Cell* maze, int size, int& start, int& end)
+void GenerateMaze(Cell maze[], int size, int& start, int& end)
 {
     srand(time(nullptr));   // Seed random number generation
     
@@ -43,31 +43,45 @@ void GenerateMaze(Cell* maze, int size, int& start, int& end)
     }
 }
 
+enum Direction
+{
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN
+};
+
+struct Neighbor
+{
+    Cell* cell;
+    Direction dir;
+};
+
 bool Iterate(Cell& startCell, Cell* maze, Cell* pathStack, int& arrIndex, int size)
 {
     int nCount = 0;
-    Cell* neighbors[4];
-    neighbors[0] = neighbors[1] = neighbors[2] = neighbors[3] = nullptr;
+    Neighbor neighbors[4];
+    neighbors[0].cell = neighbors[1].cell = neighbors[2].cell = neighbors[3].cell = nullptr;
     
     if(startCell.x - 2 >= 1 && maze[startCell.x - 2 + startCell.y*size].isWall) // left
     {
-        neighbors[0] = &maze[startCell.x - 2 + startCell.y*size];
-        nCount++;
+        neighbors[nCount].cell = &maze[startCell.x - 2 + startCell.y*size];
+        neighbors[nCount++].dir = LEFT;
     }
     if(startCell.x + 2 <= size - 2 && maze[startCell.x + 2 + startCell.y*size].isWall) // right
     {
-        neighbors[1] = &maze[startCell.x + 2 + startCell.y*size];
-        nCount++;
+        neighbors[nCount].cell = &maze[startCell.x + 2 + startCell.y*size];
+        neighbors[nCount++].dir = RIGHT;
     }
     if(startCell.y - 2 >= 1 && maze[startCell.x + (startCell.y - 2)*size].isWall) // up
     {
-        neighbors[2] = &maze[startCell.x + (startCell.y - 2)*size];
-        nCount++;
+        neighbors[nCount].cell = &maze[startCell.x + (startCell.y - 2)*size];
+        neighbors[nCount++].dir = UP;
     }
     if(startCell.y + 2 <= size - 2 && maze[startCell.x + (startCell.y + 2)*size].isWall) // down
     {
-        neighbors[3] = &maze[startCell.x + (startCell.y + 2)*size];
-        nCount++;
+        neighbors[nCount].cell = &maze[startCell.x + (startCell.y + 2)*size];
+        neighbors[nCount++].dir = DOWN;
     }
     
     // No neighbors
@@ -81,22 +95,18 @@ bool Iterate(Cell& startCell, Cell* maze, Cell* pathStack, int& arrIndex, int si
         return false;
     }
     
-    // TODO: Find better way to pick direction
-    int r = rand() % 4;
-    while(neighbors[r] == nullptr /*|| !neighbors[r]->isWall*/)
-        r = rand() % 4;
-
-    neighbors[r]->isWall = false;
-    if(r == 0)
+    int r = rand() % nCount;
+    neighbors[r].cell->isWall = false;
+    if(neighbors[r].dir == LEFT)
         maze[startCell.x - 1 + startCell.y*size].isWall = false;
-    else if(r == 1)
+    else if(neighbors[r].dir == RIGHT)
         maze[startCell.x + 1 + startCell.y*size].isWall = false;
-    else if(r == 2)
+    else if(neighbors[r].dir == UP)
         maze[startCell.x + (startCell.y - 1)*size].isWall = false;
     else
         maze[startCell.x + (startCell.y + 1)*size].isWall = false;
     
-    pathStack[++arrIndex] = *neighbors[r];
+    pathStack[++arrIndex] = *neighbors[r].cell;
     startCell = pathStack[arrIndex];
     
     return false;
@@ -116,28 +126,28 @@ Cell** DepthFirstSearch(Cell* maze, int size, Cell* start, Cell* end)
         current->visited = true;
         
         int nCount = 0;
-        Cell* neighbors[4];
-        neighbors[0] = neighbors[1] = neighbors[2] = neighbors[3] = nullptr;
+        Neighbor neighbors[4];
+        neighbors[0].cell = neighbors[1].cell = neighbors[2].cell = neighbors[3].cell = nullptr;
         
         if(!maze[currentIndex - 1].isWall && !maze[currentIndex - 1].visited)  // left
         {
-            neighbors[0] = &maze[currentIndex - 1];
-            nCount++;
+            neighbors[nCount].cell = &maze[currentIndex - 1];
+            neighbors[nCount++].dir = LEFT;
         }
         if(!maze[currentIndex + 1].isWall && !maze[currentIndex + 1].visited)  // right
         {
-            neighbors[1] = &maze[currentIndex + 1];
-            nCount++;
+            neighbors[nCount].cell = &maze[currentIndex + 1];
+            neighbors[nCount++].dir = RIGHT;
         }
         if(current != start && !maze[currentIndex - size].isWall && !maze[currentIndex - size].visited) // up
         {
-            neighbors[2] = &maze[currentIndex - size];
-            nCount++;
+            neighbors[nCount].cell = &maze[currentIndex - size];
+            neighbors[nCount++].dir = UP;
         }
         if(!maze[currentIndex + size].isWall && !maze[currentIndex + size].visited) // down
         {
-            neighbors[3] = &maze[currentIndex + size];
-            nCount++;
+            neighbors[nCount].cell = &maze[currentIndex + size];
+            neighbors[nCount++].dir = DOWN;
         }
         
         if(nCount == 0)
@@ -147,11 +157,8 @@ Cell** DepthFirstSearch(Cell* maze, int size, Cell* start, Cell* end)
             continue;
         }
         
-        int dir = rand() % 4;
-        while(neighbors[dir] == nullptr)
-            dir = rand() % 4;
- 
-        current = neighbors[dir];
+        int r = rand() % nCount;
+        current = neighbors[r].cell;
         currentIndex = current->x + current->y*size;
         solution[++sIndex] = current;
     }
