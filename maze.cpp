@@ -7,12 +7,14 @@ struct Cell
     int x, y;
     bool isWall;
     bool visited;
+    bool solution;
     
     Cell() = default;
     Cell(int x, int y) : x(x), y(y)
     {
         isWall = true;
         visited = false;
+        solution = false;
     }
 };
 
@@ -108,6 +110,7 @@ bool Maze::Iterate(sf::Image& image)
         if(stackIndex == 0)
         {
 			delete[] pathStack;
+            pathStack = nullptr;
 			return true;
 		}
         
@@ -136,5 +139,76 @@ bool Maze::Iterate(sf::Image& image)
 		image.setPixel(j, i, pixelColor);
 	}
     
+    return false;
+}
+    
+bool Maze::DepthFirstSearch(sf::Image& image)
+{
+    Cell* start = &maze[startX];
+    Cell* end = &maze[endX + size*size - size];
+    if(!pathStack)
+	{
+		pathStack = new Cell*[size*size];
+		pathStack[stackIndex = 0] = &maze[startX];
+	}
+
+    Cell* current = pathStack[stackIndex];
+    current->visited = true;
+    current->solution = true;
+    int currentIndex = current->x + current->y*size;
+    image.setPixel(current->x, current->y, sf::Color::Red);
+                
+    int nCount = 0;
+    Neighbor neighbors[4];
+    neighbors[0].cell = neighbors[1].cell = neighbors[2].cell = neighbors[3].cell = nullptr;
+    
+    if(!maze[currentIndex - 1].isWall && !maze[currentIndex - 1].visited)  // left
+    {
+        neighbors[nCount].cell = &maze[currentIndex - 1];
+        neighbors[nCount++].dir = LEFT;
+    }
+    if(!maze[currentIndex + 1].isWall && !maze[currentIndex + 1].visited)  // right
+    {
+        neighbors[nCount].cell = &maze[currentIndex + 1];
+        neighbors[nCount++].dir = RIGHT;
+    }
+    if(current != start && !maze[currentIndex - size].isWall && !maze[currentIndex - size].visited) // up
+    {
+        neighbors[nCount].cell = &maze[currentIndex - size];
+        neighbors[nCount++].dir = UP;
+    }
+    if(!maze[currentIndex + size].isWall && !maze[currentIndex + size].visited) // down
+    {
+        neighbors[nCount].cell = &maze[currentIndex + size];
+        neighbors[nCount++].dir = DOWN;
+    }
+    
+    if(nCount == 0)
+    {
+        if(stackIndex == 0)
+        {
+            delete[] pathStack;
+            pathStack = nullptr;
+            return true;
+        }
+        
+        image.setPixel(current->x, current->y, sf::Color::White);
+        current->solution = false;
+        current = pathStack[--stackIndex];
+        currentIndex = current->x + current->y * size;
+        return false;
+    }
+        
+    int r = rand() % nCount;
+    current = neighbors[r].cell;
+    currentIndex = current->x + current->y*size;
+    pathStack[++stackIndex] = current;
+        
+    // Color in the solution path
+    image.setPixel(current->x, current->y, sf::Color::Red);
+    
+    if(current == end)
+        return true;
+        
     return false;
 }

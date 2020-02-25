@@ -15,5 +15,6 @@ struct Maze
     
     void GenerateMazeData();
     bool Iterate(sf::Image& image);
+    bool DepthFirstSearch(sf::Image& image);
 };
 

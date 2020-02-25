@@ -18,9 +18,9 @@ int main()
     sf::Sprite mazeSprite;
     mazeImage.create(mazeSize, mazeSize, sf::Color::Red);
     
-    //Cell** solution = nullptr;
-    
-    bool isFinished = false;
+    bool finishedGenerating = false;
+    bool finishedSolving = false;
+    bool complete = false;
     while(window.isOpen())
     {
         sf::Event e;
@@ -32,9 +32,9 @@ int main()
         
         window.clear(sf::Color::Blue);
         
-        if(!isFinished)
+        if(!finishedGenerating)
         {
-            isFinished = maze.Iterate(mazeImage);
+            finishedGenerating = maze.Iterate(mazeImage);
             
             // Store image in texture (transition to sprite)            
             tex.loadFromImage(mazeImage);
@@ -43,31 +43,27 @@ int main()
             mazeSprite = sf::Sprite(tex);
             mazeSprite.scale(scaleRatio, scaleRatio);    
             
-            if(isFinished)
+            if(finishedGenerating)
             {
                 mazeImage.saveToFile("unsolved.png");
                 printf("Finished generating maze!\n");
-            } 
-            /*
-            if(solution == nullptr && isFinished)
-            {
-                solution = DepthFirstSearch(maze, mazeSize, &maze[startX], &maze[endX + mazeSize*mazeSize - mazeSize]);
-                
-                // Color in the solution path
-                for(int i = 0; solution[i] != nullptr; i++)
-                    mazeImage.setPixel(solution[i]->x, solution[i]->y, sf::Color::Red);
-                
-                // Store image in texture (transition to sprite)            
-                tex.loadFromImage(mazeImage);
-                
-                // Create sprite from texture
-                mazeSprite = sf::Sprite(tex);
-                mazeSprite.scale(scaleRatio, scaleRatio); 
-                mazeImage.saveToFile("solved.png");
-                printf("Finished solving maze!\n");
             }
-            */
-        }    
+        } else if(!finishedSolving)
+        {
+            finishedSolving = maze.DepthFirstSearch(mazeImage);
+
+            // Store image in texture (transition to sprite)            
+            tex.loadFromImage(mazeImage);
+            
+            // Create sprite from texture
+            mazeSprite = sf::Sprite(tex);
+            mazeSprite.scale(scaleRatio, scaleRatio); 
+        } else if(!complete)
+        {
+            complete = true;
+            mazeImage.saveToFile("solved.png");
+            printf("Finished solving maze!\n");
+        }
         
         window.draw(mazeSprite);
         window.display();
