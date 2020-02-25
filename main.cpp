@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-#include "cell.h"
+#include "maze.h"
 
 int main()
 {
@@ -11,24 +11,14 @@ int main()
     float scaleRatio = (float)WINDOW_SIZE / mazeSize;
 
     sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Mazes");
-    Cell maze[mazeSize * mazeSize];
-    
-    int startX, endX;
-    GenerateMaze(maze, mazeSize, startX, endX);
-    int arrIndex = 0;
-    Cell pathStack[mazeSize * mazeSize];
-    
-    // Starting cell is under the entrance
-    Cell startCell(startX, 1);
-    maze[startX + mazeSize].isWall = false;
-    pathStack[arrIndex] = startCell;
-    
+    Maze maze(mazeSize);
+       
     sf::Image mazeImage;
     sf::Texture tex;
     sf::Sprite mazeSprite;
     mazeImage.create(mazeSize, mazeSize, sf::Color::Red);
     
-    Cell** solution = nullptr;
+    //Cell** solution = nullptr;
     
     bool isFinished = false;
     while(window.isOpen())
@@ -44,15 +34,7 @@ int main()
         
         if(!isFinished)
         {
-            isFinished = Iterate(startCell, maze, pathStack, arrIndex, mazeSize);
-            
-            // Create image from maze data
-            for(int i = 0; i < mazeSize; i++)
-            for(int j = 0; j < mazeSize; j++)
-            {
-                sf::Color pixelColor = (maze[j + i * mazeSize].isWall ? sf::Color::Black : sf::Color::White);
-                mazeImage.setPixel(j, i, pixelColor);
-            }
+            isFinished = maze.Iterate(mazeImage);
             
             // Store image in texture (transition to sprite)            
             tex.loadFromImage(mazeImage);
@@ -66,7 +48,7 @@ int main()
                 mazeImage.saveToFile("unsolved.png");
                 printf("Finished generating maze!\n");
             } 
-            
+            /*
             if(solution == nullptr && isFinished)
             {
                 solution = DepthFirstSearch(maze, mazeSize, &maze[startX], &maze[endX + mazeSize*mazeSize - mazeSize]);
@@ -84,6 +66,7 @@ int main()
                 mazeImage.saveToFile("solved.png");
                 printf("Finished solving maze!\n");
             }
+            */
         }    
         
         window.draw(mazeSprite);
