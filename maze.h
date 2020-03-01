@@ -3,11 +3,11 @@
 
 struct Maze
 {
-	int size;
-    int startX, endX;
+	unsigned size;
+    unsigned startX, endX;
 	struct Cell* maze;
 	
-	Maze(int size);
+	Maze(unsigned size);
 	~Maze();
     
     void GenerateMazeData();

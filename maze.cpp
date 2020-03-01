@@ -2,13 +2,13 @@
 
 struct Cell
 {
-    int x, y;
+    unsigned x, y;
     bool isWall;
     bool visited;
     bool solution;
     
     Cell() = default;
-    Cell(int x, int y) : x(x), y(y)
+    Cell(unsigned x, unsigned y) : x(x), y(y)
     {
         isWall = true;
         visited = false;
@@ -30,7 +30,7 @@ struct Neighbor
     Direction dir;
 };
 
-Maze::Maze(int size) : size(size)
+Maze::Maze(unsigned size) : size(size)
 {
 	maze = new Cell[size*size];
 	GenerateMazeData();
@@ -43,14 +43,14 @@ Maze::~Maze()
 
 void Maze::GenerateMazeData()
 {
-	startX = rand() % (size - 2) + 1;
-    endX = rand() % (size - 2) + 1;
+	startX = (unsigned)rand() % (size - 2) + 1;
+    endX = (unsigned)rand() % (size - 2) + 1;
 
     // Make start and end even numbers
     startX += (startX % 2 == 0);
     endX += (endX % 2 == 0);
-    for(int i = 0; i < size; i++)
-    for(int j = 0; j < size; j++)
+    for(unsigned i = 0; i < size; i++)
+    for(unsigned j = 0; j < size; j++)
     {            
         maze[j + i*size] = Cell(j, i);
         
@@ -69,10 +69,11 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
 
     sf::Texture tex;
     sf::Sprite mazeSprite;
+    float scaleRatio = (float)window.getSize().x / size;
 
     // Initial draw
-    for(int i = 0; i < size; i++)
-    for(int j = 0; j < size; j++)
+    for(unsigned int i = 0; i < size; i++)
+    for(unsigned int j = 0; j < size; j++)
     {
         sf::Color pixelColor = (maze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
         image.setPixel(j, i, pixelColor);
@@ -145,7 +146,7 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
 
         // Create sprite from texture
         mazeSprite = sf::Sprite(tex);
-        mazeSprite.scale((float)window.getSize().x / size, (float)window.getSize().x / size);
+        mazeSprite.scale(scaleRatio, scaleRatio);
 
         window.draw(mazeSprite);
         window.display();
@@ -156,6 +157,7 @@ void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
 {
     sf::Texture tex;
     sf::Sprite mazeSprite;
+    float scaleRatio = (float)window.getSize().x / size;
 
     int wallIndex = 0;
     Neighbor wallList[size*size];
@@ -172,8 +174,8 @@ void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
     wallList[wallIndex++] = {&maze[start->x + 2*size], DOWN};
 
     // Initial draw
-    for(int i = 0; i < size; i++)
-    for(int j = 0; j < size; j++)
+    for(unsigned i = 0; i < size; i++)
+    for(unsigned j = 0; j < size; j++)
     {
         sf::Color pixelColor = (maze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
         image.setPixel(j, i, pixelColor);
@@ -196,7 +198,7 @@ void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
         Neighbor* randomWall = &wallList[randomWallIndex];
 
         // Offset to get the cell in the neighbor direction
-        int offset = (randomWall->dir == Direction::RIGHT) -
+        unsigned offset = (randomWall->dir == Direction::RIGHT) -
                      (randomWall->dir == Direction::LEFT)  -
                 size*(randomWall->dir == Direction::UP)    +
                 size*(randomWall->dir == Direction::DOWN);
@@ -249,7 +251,7 @@ void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
 
         // Create sprite from texture
         mazeSprite = sf::Sprite(tex);
-        mazeSprite.scale((float)window.getSize().x/size, (float)window.getSize().x / size);
+        mazeSprite.scale(scaleRatio, scaleRatio);
 
         window.draw(mazeSprite);
         window.display();
@@ -268,6 +270,7 @@ void Maze::DepthFirstSearch(sf::Image& image, sf::RenderWindow& window)
 
     sf::Texture tex;
     sf::Sprite mazeSprite;
+    float scaleRatio = (float)window.getSize().x / size;
 
     while(current != end)
     {
@@ -325,7 +328,7 @@ void Maze::DepthFirstSearch(sf::Image& image, sf::RenderWindow& window)
 
         // Create sprite from texture
         mazeSprite = sf::Sprite(tex);
-        mazeSprite.scale((float)window.getSize().x / size, (float)window.getSize().x / size);
+        mazeSprite.scale(scaleRatio, scaleRatio);
 
         window.draw(mazeSprite);
         window.display();

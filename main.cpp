@@ -7,9 +7,9 @@ int main()
 
     const int WINDOW_SIZE = 800;
     
-    int mazeSize;    
+    unsigned mazeSize;
     printf("Maze size (odd number): ");
-    if(scanf("%d", &mazeSize) == 0)
+    if(scanf("%u", &mazeSize) == 0)
     {
         printf("Failed to read maze size!\n");
         return -1;
