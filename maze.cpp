@@ -1,6 +1,4 @@
 #include "maze.h"
-#include <ctime>
-#include <cstdlib>
 
 struct Cell
 {
@@ -47,9 +45,7 @@ Maze::~Maze()
 
 void Maze::GenerateMazeData()
 {
-	srand(time(nullptr));   // Seed random number generation
-    
-    startX = rand() % (size - 2) + 1;
+	startX = rand() % (size - 2) + 1;
     endX = rand() % (size - 2) + 1;
 
     // Make start and end even numbers
