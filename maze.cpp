@@ -33,8 +33,6 @@ struct Neighbor
 Maze::Maze(int size) : size(size)
 {
 	maze = new Cell[size*size];
-	pathStack = nullptr;
-	
 	GenerateMazeData();
 }
 
@@ -65,13 +63,20 @@ void Maze::GenerateMazeData()
 
 void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
 {
-    pathStack = new Cell*[size*size];
-    pathStack[stackIndex = 0] = &maze[startX + size];
-
-    float scaleRatio = (float)window.getSize().x / size;
+    int stackIndex = 0;
+    Cell* pathStack[size*size];
+    pathStack[0] = &maze[startX + size];
 
     sf::Texture tex;
     sf::Sprite mazeSprite;
+
+    // Initial draw
+    for(int i = 0; i < size; i++)
+    for(int j = 0; j < size; j++)
+    {
+        sf::Color pixelColor = (maze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
+        image.setPixel(j, i, pixelColor);
+    }
 
     while(true)
     {
@@ -79,7 +84,10 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
         while(window.pollEvent(e))
         {
             if(e.type == sf::Event::Closed)
+            {
                 window.close();
+                exit(-1);
+            }
         }
         window.clear(sf::Color::Blue);
 
@@ -89,26 +97,17 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
         Neighbor neighbors[4];
         neighbors[0].cell = neighbors[1].cell = neighbors[2].cell = neighbors[3].cell = nullptr;
 
-        if(current->x - 2 >= 1 && maze[current->x - 2 + current->y*size].isWall) // left
-        {
-            neighbors[nCount].cell = &maze[current->x - 2 + current->y*size];
-            neighbors[nCount++].dir = LEFT;
-        }
-        if(current->x + 2 <= size - 2 && maze[current->x + 2 + current->y*size].isWall) // right
-        {
-            neighbors[nCount].cell = &maze[current->x + 2 + current->y*size];
-            neighbors[nCount++].dir = RIGHT;
-        }
-        if(current->y - 2 >= 1 && maze[current->x + (current->y - 2)*size].isWall) // up
-        {
-            neighbors[nCount].cell = &maze[current->x + (current->y - 2)*size];
-            neighbors[nCount++].dir = UP;
-        }
-        if(current->y + 2 <= size - 2 && maze[current->x + (current->y + 2)*size].isWall) // down
-        {
-            neighbors[nCount].cell = &maze[current->x + (current->y + 2)*size];
-            neighbors[nCount++].dir = DOWN;
-        }
+        if(current->x - 2 >= 1 && maze[current->x - 2 + current->y*size].isWall)
+            neighbors[nCount++] = {&maze[current->x - 2 + current->y*size], LEFT};
+
+        if(current->x + 2 <= size - 2 && maze[current->x + 2 + current->y*size].isWall)
+            neighbors[nCount++] = {&maze[current->x + 2 + current->y*size], RIGHT};
+
+        if(current->y - 2 >= 1 && maze[current->x + (current->y - 2)*size].isWall)
+            neighbors[nCount++] = {&maze[current->x + (current->y - 2)*size], UP};
+
+        if(current->y + 2 <= size - 2 && maze[current->x + (current->y + 2)*size].isWall)
+            neighbors[nCount++] = {&maze[current->x + (current->y + 2)*size], DOWN};
 
         // No neighbors
         if(nCount == 0)
@@ -116,43 +115,141 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
             current = pathStack[--stackIndex];
 
             if(stackIndex == 0)
-            {
-        		delete[] pathStack;
-                pathStack = nullptr;
                 break;
-        	}
 
             continue;
         }
 
         int r = rand() % nCount;
         neighbors[r].cell->isWall = false;
+        image.setPixel(neighbors[r].cell->x, neighbors[r].cell->y, sf::Color::White);
+
+        Cell* cellToAdd;
         if(neighbors[r].dir == LEFT)
-            maze[current->x - 1 + current->y*size].isWall = false;
+            cellToAdd = &maze[current->x - 1 + current->y*size];
         else if(neighbors[r].dir == RIGHT)
-            maze[current->x + 1 + current->y*size].isWall = false;
+            cellToAdd = &maze[current->x + 1 + current->y*size];
         else if(neighbors[r].dir == UP)
-            maze[current->x + (current->y - 1)*size].isWall = false;
+            cellToAdd = &maze[current->x + (current->y - 1)*size];
         else
-            maze[current->x + (current->y + 1)*size].isWall = false;
+            cellToAdd = &maze[current->x + (current->y + 1)*size];
+
+        cellToAdd->isWall = false;
+        image.setPixel(cellToAdd->x, cellToAdd->y, sf::Color::White);
 
         pathStack[++stackIndex] = neighbors[r].cell;
         current = pathStack[stackIndex];
-
-        // Create image from maze data
-        for(int i = 0; i < size; i++)
-        for(int j = 0; j < size; j++)
-        {
-        	sf::Color pixelColor = (maze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
-        	image.setPixel(j, i, pixelColor);
-        }
 
         // Store image in texture (transition to sprite)
         tex.loadFromImage(image);
 
         // Create sprite from texture
         mazeSprite = sf::Sprite(tex);
-        mazeSprite.scale(scaleRatio, scaleRatio);
+        mazeSprite.scale((float)window.getSize().x / size, (float)window.getSize().x / size);
+
+        window.draw(mazeSprite);
+        window.display();
+    }
+}
+
+void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
+{
+    sf::Texture tex;
+    sf::Sprite mazeSprite;
+
+    int wallIndex = 0;
+    Neighbor wallList[size*size];
+
+    maze[startX].isWall = false;
+
+    // Start is below maze start
+    Cell* start = &maze[startX + size];
+    start->isWall = false;
+
+    // Add start walls to wall list
+    if(start->x > 2) wallList[wallIndex++] = {&maze[start->x - 1 + size], LEFT};
+    if(start->x < size - 2) wallList[wallIndex++] = {&maze[start->x + 1 + size], RIGHT};
+    wallList[wallIndex++] = {&maze[start->x + 2*size], DOWN};
+
+    // Initial draw
+    for(int i = 0; i < size; i++)
+    for(int j = 0; j < size; j++)
+    {
+        sf::Color pixelColor = (maze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
+        image.setPixel(j, i, pixelColor);
+    }
+
+    while(wallIndex != 0)
+    {
+        sf::Event e;
+        while(window.pollEvent(e))
+        {
+            if(e.type == sf::Event::Closed)
+            {
+                window.close();
+                exit(-1);
+            }
+        }
+        window.clear(sf::Color::Blue);
+
+        int randomWallIndex = rand() % wallIndex;
+        Neighbor* randomWall = &wallList[randomWallIndex];
+
+        // Offset to get the cell in the neighbor direction
+        int offset = (randomWall->dir == Direction::RIGHT) -
+                     (randomWall->dir == Direction::LEFT)  -
+                size*(randomWall->dir == Direction::UP)    +
+                size*(randomWall->dir == Direction::DOWN);
+
+        Cell* cellToMark = &maze[randomWall->cell->x + randomWall->cell->y*size + offset];
+        Cell* lastPathCell = &maze[randomWall->cell->x + randomWall->cell->y*size - offset];
+
+        // If only one of the cells is marked as a path, mark the next one
+        bool shouldMark = (!cellToMark->isWall && lastPathCell->isWall) || (cellToMark->isWall && !lastPathCell->isWall);
+        if(shouldMark)
+        {
+            // Connect path to new cell
+            cellToMark->isWall = false;
+            randomWall->cell->isWall = false;
+            image.setPixel(cellToMark->x, cellToMark->y, sf::Color::White);
+            image.setPixel(randomWall->cell->x, randomWall->cell->y, sf::Color::White);
+
+            // Avoiding C++ features while still using lambdas :^)
+            auto contains = [](Neighbor* neighbors, int size, Cell* cell)
+            {
+                bool res = false;
+                for(int i = 0; i < size; i++)
+                if(neighbors[i].cell == cell)
+                {
+                    res = true;
+                    break;
+                }
+
+                return res;
+            };
+
+            // Add neighboring walls of newly added cell to the wall list
+            if(cellToMark->x < size - 2 && maze[cellToMark->x + 1 + cellToMark->y*size].isWall && !contains(wallList, wallIndex, &maze[cellToMark->x + 1 + cellToMark->y*size]))
+                wallList[wallIndex++] = {&maze[cellToMark->x + 1 + cellToMark->y*size], RIGHT};
+            if(cellToMark->x > 2 && maze[cellToMark->x - 1 + cellToMark->y*size].isWall && !contains(wallList, wallIndex, &maze[cellToMark->x - 1 + cellToMark->y*size]))
+                wallList[wallIndex++] = {&maze[cellToMark->x - 1 + cellToMark->y*size], LEFT};
+            if(cellToMark->y < size - 2 && maze[cellToMark->x + cellToMark->y*size + size].isWall && !contains(wallList, wallIndex, &maze[cellToMark->x + size + cellToMark->y*size]))
+                wallList[wallIndex++] = {&maze[cellToMark->x + cellToMark->y*size + size], DOWN};
+            if(cellToMark->y > 2 && maze[cellToMark->x + cellToMark->y*size - size].isWall && !contains(wallList, wallIndex, &maze[cellToMark->x - size + cellToMark->y*size]))
+                wallList[wallIndex++] = {&maze[cellToMark->x + cellToMark->y*size - size], UP};
+        }
+
+        // Overwrite current wall in list with last wall
+        // (This is only necessary because I am trying to
+        // avoid the C++ STL, and using C style arrays.)
+        wallList[randomWallIndex] = wallList[--wallIndex];
+
+        // Store image in texture (transition to sprite)
+        tex.loadFromImage(image);
+
+        // Create sprite from texture
+        mazeSprite = sf::Sprite(tex);
+        mazeSprite.scale((float)window.getSize().x/size, (float)window.getSize().x / size);
 
         window.draw(mazeSprite);
         window.display();
@@ -161,78 +258,63 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
     
 void Maze::DepthFirstSearch(sf::Image& image, sf::RenderWindow& window)
 {
-    pathStack = new Cell*[size*size];
-    pathStack[stackIndex = 0] = &maze[startX];
+    int stackIndex = 0;
+    Cell* pathStack[size*size];
+    pathStack[0] = &maze[startX];
 
-    float scaleRatio = (float)window.getSize().x / size;
+    Cell* current = pathStack[stackIndex];
+    Cell* start = &maze[startX];
+    Cell* end = &maze[endX + size*size - size];
 
     sf::Texture tex;
     sf::Sprite mazeSprite;
 
-    // Todo: Clean up
-    while(true)
+    while(current != end)
     {
         sf::Event e;
         while(window.pollEvent(e))
         {
             if(e.type == sf::Event::Closed)
+            {
                 window.close();
+                exit(-1);
+            }
         }
         window.clear(sf::Color::Blue);
 
-        Cell* start = &maze[startX];
-        Cell* end = &maze[endX + size*size - size];
-
-        Cell* current = pathStack[stackIndex];
         current->visited = true;
         current->solution = true;
-        int currentIndex = current->x + current->y*size;
         image.setPixel(current->x, current->y, sf::Color::Red);
 
         int nCount = 0;
         Neighbor neighbors[4];
         neighbors[0].cell = neighbors[1].cell = neighbors[2].cell = neighbors[3].cell = nullptr;
 
-        if(!maze[currentIndex - 1].isWall && !maze[currentIndex - 1].visited)  // left
-        {
-            neighbors[nCount].cell = &maze[currentIndex - 1];
-            neighbors[nCount++].dir = LEFT;
-        }
-        if(!maze[currentIndex + 1].isWall && !maze[currentIndex + 1].visited)  // right
-        {
-            neighbors[nCount].cell = &maze[currentIndex + 1];
-            neighbors[nCount++].dir = RIGHT;
-        }
-        if(current != start && !maze[currentIndex - size].isWall && !maze[currentIndex - size].visited) // up
-        {
-            neighbors[nCount].cell = &maze[currentIndex - size];
-            neighbors[nCount++].dir = UP;
-        }
-        if(!maze[currentIndex + size].isWall && !maze[currentIndex + size].visited) // down
-        {
-            neighbors[nCount].cell = &maze[currentIndex + size];
-            neighbors[nCount++].dir = DOWN;
-        }
+        if(!maze[current->x - 1 + current->y*size].isWall && !maze[current->x - 1 + current->y*size].visited)
+            neighbors[nCount++] = {&maze[current->x - 1 + current->y*size], LEFT};
+
+        if(!maze[current->x + 1 + current->y*size].isWall && !maze[current->x + 1 + current->y*size].visited)
+            neighbors[nCount++] = {&maze[current->x + 1 + current->y*size], RIGHT};
+
+        if(current != start && !maze[current->x - size + current->y*size].isWall && !maze[current->x - size + current->y*size].visited)
+            neighbors[nCount++] = {&maze[current->x - size + current->y*size], UP};
+
+        if(!maze[current->x + size + current->y*size].isWall && !maze[current->x + size + current->y*size].visited)
+            neighbors[nCount++] = {&maze[current->x + size + current->y*size], DOWN};
 
         if(nCount == 0)
         {
             if(stackIndex == 0)
-            {
-                delete[] pathStack;
-                pathStack = nullptr;
                 break;
-            }
 
             image.setPixel(current->x, current->y, sf::Color::White);
             current->solution = false;
             current = pathStack[--stackIndex];
-            currentIndex = current->x + current->y * size;
             continue;
         }
 
         int r = rand() % nCount;
         current = neighbors[r].cell;
-        currentIndex = current->x + current->y*size;
         pathStack[++stackIndex] = current;
 
         // Color in the solution path
@@ -243,7 +325,7 @@ void Maze::DepthFirstSearch(sf::Image& image, sf::RenderWindow& window)
 
         // Create sprite from texture
         mazeSprite = sf::Sprite(tex);
-        mazeSprite.scale(scaleRatio, scaleRatio);
+        mazeSprite.scale((float)window.getSize().x / size, (float)window.getSize().x / size);
 
         window.draw(mazeSprite);
         window.display();

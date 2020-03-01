@@ -22,7 +22,7 @@ int main()
     mazeImage.create(mazeSize, mazeSize, sf::Color::Red);
 
     // Generate maze
-    maze.DepthFirstGen(mazeImage, window);
+    maze.RandomizedPrims(mazeImage, window);
 
     // Save generated maze image
     mazeImage.saveToFile("unsolved.png");
