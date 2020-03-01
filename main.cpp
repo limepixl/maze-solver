@@ -8,19 +8,14 @@ int main()
     int mazeSize;    
     printf("Maze size (odd number): ");
     scanf("%d", &mazeSize);
-    float scaleRatio = (float)WINDOW_SIZE / mazeSize;
 
-    sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Mazes");
+    sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Mazes", sf::Style::Titlebar);
     Maze maze(mazeSize);
        
     sf::Image mazeImage;
-    sf::Texture tex;
-    sf::Sprite mazeSprite;
     mazeImage.create(mazeSize, mazeSize, sf::Color::Red);
-    
-    bool finishedGenerating = false;
-    bool finishedSolving = false;
-    bool complete = false;
+
+    bool firstPass = false;
     while(window.isOpen())
     {
         sf::Event e;
@@ -30,43 +25,24 @@ int main()
                 window.close();
         }
         
-        window.clear(sf::Color::Blue);
-        
-        if(!finishedGenerating)
+        if(!firstPass)
         {
-            finishedGenerating = maze.Iterate(mazeImage);
-            
-            // Store image in texture (transition to sprite)            
-            tex.loadFromImage(mazeImage);
-            
-            // Create sprite from texture
-            mazeSprite = sf::Sprite(tex);
-            mazeSprite.scale(scaleRatio, scaleRatio);    
-            
-            if(finishedGenerating)
-            {
-                mazeImage.saveToFile("unsolved.png");
-                printf("Finished generating maze!\n");
-            }
-        } else if(!finishedSolving)
-        {
-            finishedSolving = maze.DepthFirstSearch(mazeImage);
+            firstPass = true;
 
-            // Store image in texture (transition to sprite)            
-            tex.loadFromImage(mazeImage);
-            
-            // Create sprite from texture
-            mazeSprite = sf::Sprite(tex);
-            mazeSprite.scale(scaleRatio, scaleRatio); 
-        } else if(!complete)
-        {
-            complete = true;
+            // Generate maze
+            maze.DepthFirstGen(mazeImage, window);
+
+            // Save generated maze image
+            mazeImage.saveToFile("unsolved.png");
+            printf("Finished generating maze!\n");
+
+            // Solve maze
+            maze.DepthFirstSearch(mazeImage, window);
+
+            // Save solved maze image
             mazeImage.saveToFile("solved.png");
             printf("Finished solving maze!\n");
         }
-        
-        window.draw(mazeSprite);
-        window.display();
     }
     
     return 0;
