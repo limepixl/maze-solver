@@ -7,9 +7,13 @@ int main()
     
     int mazeSize;    
     printf("Maze size (odd number): ");
-    scanf("%d", &mazeSize);
+    if(scanf("%d", &mazeSize) == 0)
+    {
+        printf("Failed to read maze size!\n");
+        return -1;
+    }
 
-    sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Mazes", sf::Style::Titlebar);
+    sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Mazes", sf::Style::Close);
     Maze maze(mazeSize);
        
     sf::Image mazeImage;
