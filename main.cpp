@@ -8,12 +8,14 @@ int main()
     const int WINDOW_SIZE = 800;
     
     unsigned mazeSize;
-    printf("Maze size (odd number): ");
+    printf("Enter maze size (odd number): ");
     if(scanf("%u", &mazeSize) == 0)
     {
         printf("Failed to read maze size!\n");
         return -1;
     }
+    mazeSize += !(mazeSize % 2);
+    printf("Maze size: %d\n", mazeSize);
 
     sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Mazes", sf::Style::Close);
     Maze maze(mazeSize);
