@@ -1,22 +1,37 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <vector>
+
+struct Cell
+{
+    int x, y;
+    bool isWall;
+    bool visited;
+    bool solution;
+
+    Cell() = default;
+    Cell(int x, int y) : x(x), y(y)
+    {
+        isWall = true;
+        visited = false;
+        solution = false;
+    }
+};
 
 struct Maze
 {
-	unsigned size;
-    unsigned startX, endX;
-	struct Cell* maze;
+	int size;
+    int startX, endX;
+	std::vector<Cell> maze;
 	
-	Maze(unsigned size);
-	~Maze();
+	Maze(int size);
     
     void GenerateMazeData();
-
-    // Generation algorithms
-    void DepthFirstGen(sf::Image& image, sf::RenderWindow& window);
-    void RandomizedPrims(sf::Image& image, sf::RenderWindow& window);
-
-    // Solving algorithms
-    void DepthFirstSearch(sf::Image& image, sf::RenderWindow& window);
 };
 
+// Generation algorithms
+void DepthFirstGen(Maze& maze, int size, sf::Image& image, sf::RenderWindow& window);
+Maze RandomizedPrims(int size, sf::Image& image, sf::RenderWindow& window);
+
+// Solving algorithms
+void DepthFirstSearch(Maze& maze, sf::Image& image, sf::RenderWindow& window);

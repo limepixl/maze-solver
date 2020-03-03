@@ -1,21 +1,5 @@
 #include "maze.h"
 
-struct Cell
-{
-    unsigned x, y;
-    bool isWall;
-    bool visited;
-    bool solution;
-    
-    Cell() = default;
-    Cell(unsigned x, unsigned y) : x(x), y(y)
-    {
-        isWall = true;
-        visited = false;
-        solution = false;
-    }
-};
-
 enum Direction
 {
     LEFT,
@@ -30,27 +14,22 @@ struct Neighbor
     Direction dir;
 };
 
-Maze::Maze(unsigned size) : size(size)
+Maze::Maze(int size) : size(size)
 {
-	maze = new Cell[size*size];
+	maze.reserve(size*size);
 	GenerateMazeData();
-}
-
-Maze::~Maze()
-{
-	delete[] maze;
 }
 
 void Maze::GenerateMazeData()
 {
-	startX = (unsigned)rand() % (size - 2) + 1;
-    endX = (unsigned)rand() % (size - 2) + 1;
+	startX = rand() % (size - 2) + 1;
+    endX = rand() % (size - 2) + 1;
 
     // Make start and end even numbers
     startX += (startX % 2 == 0);
     endX += (endX % 2 == 0);
-    for(unsigned i = 0; i < size; i++)
-    for(unsigned j = 0; j < size; j++)
+    for(int i = 0; i < size; i++)
+    for(int j = 0; j < size; j++)
     {            
         maze[j + i*size] = Cell(j, i);
         
@@ -61,21 +40,25 @@ void Maze::GenerateMazeData()
     }
 }
 
-void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
+void DepthFirstGen(Maze& maze, int size, sf::Image& image, sf::RenderWindow& window)
 {
+    maze = Maze(size);
+    int startX = maze.startX;
+    std::vector<Cell>& cellmaze = maze.maze;
+
     int stackIndex = 0;
     Cell* pathStack[size*size];
-    pathStack[0] = &maze[startX + size];
+    pathStack[0] = &cellmaze[startX + size];
 
     sf::Texture tex;
     sf::Sprite mazeSprite;
     float scaleRatio = (float)window.getSize().x / size;
 
     // Initial draw
-    for(unsigned int i = 0; i < size; i++)
-    for(unsigned int j = 0; j < size; j++)
+    for(int i = 0; i < size; i++)
+    for(int j = 0; j < size; j++)
     {
-        sf::Color pixelColor = (maze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
+        sf::Color pixelColor = (cellmaze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
         image.setPixel(j, i, pixelColor);
     }
 
@@ -98,17 +81,17 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
         Neighbor neighbors[4];
         neighbors[0].cell = neighbors[1].cell = neighbors[2].cell = neighbors[3].cell = nullptr;
 
-        if(current->x - 2 >= 1 && maze[current->x - 2 + current->y*size].isWall)
-            neighbors[nCount++] = {&maze[current->x - 2 + current->y*size], LEFT};
+        if(current->x - 2 >= 1 && cellmaze[current->x - 2 + current->y*size].isWall)
+            neighbors[nCount++] = {&cellmaze[current->x - 2 + current->y*size], LEFT};
 
-        if(current->x + 2 <= size - 2 && maze[current->x + 2 + current->y*size].isWall)
-            neighbors[nCount++] = {&maze[current->x + 2 + current->y*size], RIGHT};
+        if(current->x + 2 <= size - 2 && cellmaze[current->x + 2 + current->y*size].isWall)
+            neighbors[nCount++] = {&cellmaze[current->x + 2 + current->y*size], RIGHT};
 
-        if(current->y - 2 >= 1 && maze[current->x + (current->y - 2)*size].isWall)
-            neighbors[nCount++] = {&maze[current->x + (current->y - 2)*size], UP};
+        if(current->y - 2 >= 1 && cellmaze[current->x + (current->y - 2)*size].isWall)
+            neighbors[nCount++] = {&cellmaze[current->x + (current->y - 2)*size], UP};
 
-        if(current->y + 2 <= size - 2 && maze[current->x + (current->y + 2)*size].isWall)
-            neighbors[nCount++] = {&maze[current->x + (current->y + 2)*size], DOWN};
+        if(current->y + 2 <= size - 2 && cellmaze[current->x + (current->y + 2)*size].isWall)
+            neighbors[nCount++] = {&cellmaze[current->x + (current->y + 2)*size], DOWN};
 
         // No neighbors
         if(nCount == 0)
@@ -127,13 +110,13 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
 
         Cell* cellToAdd;
         if(neighbors[r].dir == LEFT)
-            cellToAdd = &maze[current->x - 1 + current->y*size];
+            cellToAdd = &cellmaze[current->x - 1 + current->y*size];
         else if(neighbors[r].dir == RIGHT)
-            cellToAdd = &maze[current->x + 1 + current->y*size];
+            cellToAdd = &cellmaze[current->x + 1 + current->y*size];
         else if(neighbors[r].dir == UP)
-            cellToAdd = &maze[current->x + (current->y - 1)*size];
+            cellToAdd = &cellmaze[current->x + (current->y - 1)*size];
         else
-            cellToAdd = &maze[current->x + (current->y + 1)*size];
+            cellToAdd = &cellmaze[current->x + (current->y + 1)*size];
 
         cellToAdd->isWall = false;
         image.setPixel(cellToAdd->x, cellToAdd->y, sf::Color::White);
@@ -151,10 +134,18 @@ void Maze::DepthFirstGen(sf::Image& image, sf::RenderWindow& window)
         window.draw(mazeSprite);
         window.display();
     }
+
+    // Save generated maze image
+    image.saveToFile("unsolved.png");
+    printf("Finished generating maze!\n");
 }
 
-void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
+Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
 {
+    Maze maze(size);
+    int startX = maze.startX;
+    std::vector<Cell>& cellmaze = maze.maze;
+
     sf::Texture tex;
     sf::Sprite mazeSprite;
     float scaleRatio = (float)window.getSize().x / size;
@@ -162,22 +153,22 @@ void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
     int wallIndex = 0;
     Neighbor wallList[size*size];
 
-    maze[startX].isWall = false;
+    cellmaze[startX].isWall = false;
 
     // Start is below maze start
-    Cell* start = &maze[startX + size];
+    Cell* start = &cellmaze[startX + size];
     start->isWall = false;
 
     // Add start walls to wall list
-    if(start->x > 2) wallList[wallIndex++] = {&maze[start->x - 1 + size], LEFT};
-    if(start->x < size - 2) wallList[wallIndex++] = {&maze[start->x + 1 + size], RIGHT};
-    wallList[wallIndex++] = {&maze[start->x + 2*size], DOWN};
+    if(start->x > 2) wallList[wallIndex++] = {&cellmaze[start->x - 1 + size], LEFT};
+    if(start->x < size - 2) wallList[wallIndex++] = {&cellmaze[start->x + 1 + size], RIGHT};
+    wallList[wallIndex++] = {&cellmaze[start->x + 2*size], DOWN};
 
     // Initial draw
-    for(unsigned i = 0; i < size; i++)
-    for(unsigned j = 0; j < size; j++)
+    for(int i = 0; i < size; i++)
+    for(int j = 0; j < size; j++)
     {
-        sf::Color pixelColor = (maze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
+        sf::Color pixelColor = (cellmaze[j + i * size].isWall ? sf::Color::Black : sf::Color::White);
         image.setPixel(j, i, pixelColor);
     }
 
@@ -198,13 +189,13 @@ void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
         Neighbor* randomWall = &wallList[randomWallIndex];
 
         // Offset to get the cell in the neighbor direction
-        unsigned offset = (randomWall->dir == Direction::RIGHT) -
+        int offset = (randomWall->dir == Direction::RIGHT) -
                      (randomWall->dir == Direction::LEFT)  -
                 size*(randomWall->dir == Direction::UP)    +
                 size*(randomWall->dir == Direction::DOWN);
 
-        Cell* cellToMark = &maze[randomWall->cell->x + randomWall->cell->y*size + offset];
-        Cell* lastPathCell = &maze[randomWall->cell->x + randomWall->cell->y*size - offset];
+        Cell* cellToMark = &cellmaze[randomWall->cell->x + randomWall->cell->y*size + offset];
+        Cell* lastPathCell = &cellmaze[randomWall->cell->x + randomWall->cell->y*size - offset];
 
         // If only one of the cells is marked as a path, mark the next one
         bool shouldMark = (!cellToMark->isWall && lastPathCell->isWall) || (cellToMark->isWall && !lastPathCell->isWall);
@@ -231,14 +222,14 @@ void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
             };
 
             // Add neighboring walls of newly added cell to the wall list
-            if(cellToMark->x < size - 2 && maze[cellToMark->x + 1 + cellToMark->y*size].isWall && !contains(wallList, wallIndex, &maze[cellToMark->x + 1 + cellToMark->y*size]))
-                wallList[wallIndex++] = {&maze[cellToMark->x + 1 + cellToMark->y*size], RIGHT};
-            if(cellToMark->x > 2 && maze[cellToMark->x - 1 + cellToMark->y*size].isWall && !contains(wallList, wallIndex, &maze[cellToMark->x - 1 + cellToMark->y*size]))
-                wallList[wallIndex++] = {&maze[cellToMark->x - 1 + cellToMark->y*size], LEFT};
-            if(cellToMark->y < size - 2 && maze[cellToMark->x + cellToMark->y*size + size].isWall && !contains(wallList, wallIndex, &maze[cellToMark->x + size + cellToMark->y*size]))
-                wallList[wallIndex++] = {&maze[cellToMark->x + cellToMark->y*size + size], DOWN};
-            if(cellToMark->y > 2 && maze[cellToMark->x + cellToMark->y*size - size].isWall && !contains(wallList, wallIndex, &maze[cellToMark->x - size + cellToMark->y*size]))
-                wallList[wallIndex++] = {&maze[cellToMark->x + cellToMark->y*size - size], UP};
+            if(cellToMark->x < size - 2 && cellmaze[cellToMark->x + 1 + cellToMark->y*size].isWall && !contains(wallList, wallIndex, &cellmaze[cellToMark->x + 1 + cellToMark->y*size]))
+                wallList[wallIndex++] = {&cellmaze[cellToMark->x + 1 + cellToMark->y*size], RIGHT};
+            if(cellToMark->x > 2 && cellmaze[cellToMark->x - 1 + cellToMark->y*size].isWall && !contains(wallList, wallIndex, &cellmaze[cellToMark->x - 1 + cellToMark->y*size]))
+                wallList[wallIndex++] = {&cellmaze[cellToMark->x - 1 + cellToMark->y*size], LEFT};
+            if(cellToMark->y < size - 2 && cellmaze[cellToMark->x + cellToMark->y*size + size].isWall && !contains(wallList, wallIndex, &cellmaze[cellToMark->x + size + cellToMark->y*size]))
+                wallList[wallIndex++] = {&cellmaze[cellToMark->x + cellToMark->y*size + size], DOWN};
+            if(cellToMark->y > 2 && cellmaze[cellToMark->x + cellToMark->y*size - size].isWall && !contains(wallList, wallIndex, &cellmaze[cellToMark->x - size + cellToMark->y*size]))
+                wallList[wallIndex++] = {&cellmaze[cellToMark->x + cellToMark->y*size - size], UP};
         }
 
         // Overwrite current wall in list with last wall
@@ -256,17 +247,40 @@ void Maze::RandomizedPrims(sf::Image &image, sf::RenderWindow &window)
         window.draw(mazeSprite);
         window.display();
     }
+
+    // Save generated maze image
+    image.saveToFile("unsolved.png");
+    printf("Finished generating maze!\n");
+
+    return maze;
 }
     
-void Maze::DepthFirstSearch(sf::Image& image, sf::RenderWindow& window)
+void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
 {
+    int size = m.size;
+    int startX = m.startX;
+    int endX = m.endX;
+
+    // Reset everything if solving for second time
+    for(auto& c : m.maze)
+    {
+        c.solution = false;
+        c.visited = false;
+    }
+    for(int i = 0; i < size; i++)
+    for(int j = 0; j < size; j++)
+    {
+        Cell& currentCell = m.maze[j+i*size];
+        image.setPixel(j, i, (currentCell.isWall ? sf::Color::Black : sf::Color::White));
+    }
+
     int stackIndex = 0;
     Cell* pathStack[size*size];
-    pathStack[0] = &maze[startX];
+    pathStack[0] = &m.maze[startX];
 
     Cell* current = pathStack[stackIndex];
-    Cell* start = &maze[startX];
-    Cell* end = &maze[endX + size*size - size];
+    Cell* start = &m.maze[startX];
+    Cell* end = &m.maze[endX + size*size - size];
 
     sf::Texture tex;
     sf::Sprite mazeSprite;
@@ -293,17 +307,17 @@ void Maze::DepthFirstSearch(sf::Image& image, sf::RenderWindow& window)
         Neighbor neighbors[4];
         neighbors[0].cell = neighbors[1].cell = neighbors[2].cell = neighbors[3].cell = nullptr;
 
-        if(!maze[current->x - 1 + current->y*size].isWall && !maze[current->x - 1 + current->y*size].visited)
-            neighbors[nCount++] = {&maze[current->x - 1 + current->y*size], LEFT};
+        if(!m.maze[current->x - 1 + current->y*size].isWall && !m.maze[current->x - 1 + current->y*size].visited)
+            neighbors[nCount++] = {&m.maze[current->x - 1 + current->y*size], LEFT};
 
-        if(!maze[current->x + 1 + current->y*size].isWall && !maze[current->x + 1 + current->y*size].visited)
-            neighbors[nCount++] = {&maze[current->x + 1 + current->y*size], RIGHT};
+        if(!m.maze[current->x + 1 + current->y*size].isWall && !m.maze[current->x + 1 + current->y*size].visited)
+            neighbors[nCount++] = {&m.maze[current->x + 1 + current->y*size], RIGHT};
 
-        if(current != start && !maze[current->x - size + current->y*size].isWall && !maze[current->x - size + current->y*size].visited)
-            neighbors[nCount++] = {&maze[current->x - size + current->y*size], UP};
+        if(current != start && !m.maze[current->x - size + current->y*size].isWall && !m.maze[current->x - size + current->y*size].visited)
+            neighbors[nCount++] = {&m.maze[current->x - size + current->y*size], UP};
 
-        if(!maze[current->x + size + current->y*size].isWall && !maze[current->x + size + current->y*size].visited)
-            neighbors[nCount++] = {&maze[current->x + size + current->y*size], DOWN};
+        if(!m.maze[current->x + size + current->y*size].isWall && !m.maze[current->x + size + current->y*size].visited)
+            neighbors[nCount++] = {&m.maze[current->x + size + current->y*size], DOWN};
 
         if(nCount == 0)
         {
@@ -336,4 +350,8 @@ void Maze::DepthFirstSearch(sf::Image& image, sf::RenderWindow& window)
         if(current == end)
             break;
     }
+
+    // Save solved maze image
+    image.saveToFile("solved.png");
+    printf("Finished solving maze!\n");
 }
