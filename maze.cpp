@@ -262,10 +262,10 @@ void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
     int endX = m.endX;
 
     // Reset everything if solving for second time
-    for(auto& c : m.maze)
+    for(int i = 0; i < m.size*size; i++)
     {
-        c.solution = false;
-        c.visited = false;
+        m.maze[i].solution = false;
+        m.maze[i].visited = false;
     }
     for(int i = 0; i < size; i++)
     for(int j = 0; j < size; j++)
