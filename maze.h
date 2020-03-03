@@ -30,7 +30,7 @@ struct Maze
 };
 
 // Generation algorithms
-void DepthFirstGen(Maze& maze, int size, sf::Image& image, sf::RenderWindow& window);
+Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window);
 Maze RandomizedPrims(int size, sf::Image& image, sf::RenderWindow& window);
 
 // Solving algorithms

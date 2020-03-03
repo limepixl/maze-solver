@@ -40,9 +40,9 @@ void Maze::GenerateMazeData()
     }
 }
 
-void DepthFirstGen(Maze& maze, int size, sf::Image& image, sf::RenderWindow& window)
+Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
 {
-    maze = Maze(size);
+    Maze maze(size);
     int startX = maze.startX;
     std::vector<Cell>& cellmaze = maze.maze;
 
@@ -138,6 +138,8 @@ void DepthFirstGen(Maze& maze, int size, sf::Image& image, sf::RenderWindow& win
     // Save generated maze image
     image.saveToFile("unsolved.png");
     printf("Finished generating maze!\n");
+
+    return maze;
 }
 
 Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
