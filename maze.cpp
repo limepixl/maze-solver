@@ -62,6 +62,7 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
         image.setPixel(j, i, pixelColor);
     }
 
+    window.setFramerateLimit(0);
     while(true)
     {
         sf::Event e;
@@ -139,6 +140,7 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
     image.saveToFile("unsolved.png");
     printf("Finished generating maze!\n");
 
+    window.setFramerateLimit(30);
     return maze;
 }
 
@@ -174,6 +176,7 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
         image.setPixel(j, i, pixelColor);
     }
 
+    window.setFramerateLimit(0);
     while(wallIndex != 0)
     {
         sf::Event e;
@@ -254,6 +257,7 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
     image.saveToFile("unsolved.png");
     printf("Finished generating maze!\n");
 
+    window.setFramerateLimit(30);
     return maze;
 }
     
@@ -288,6 +292,7 @@ void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
     sf::Sprite mazeSprite;
     float scaleRatio = (float)window.getSize().x / size;
 
+    window.setFramerateLimit(0);
     while(current != end)
     {
         sf::Event e;
@@ -356,4 +361,6 @@ void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
     // Save solved maze image
     image.saveToFile("solved.png");
     printf("Finished solving maze!\n");
+
+    window.setFramerateLimit(30);
 }
