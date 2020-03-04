@@ -43,10 +43,12 @@ int main()
 
     int buttonCount = 4;
     Button buttons[buttonCount];
-    buttons[0] = Button("Generate maze", labelFont, sf::Vector2f(0.0f, WIDTH), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
-    buttons[1] = Button("Solve maze", labelFont, sf::Vector2f((float)WIDTH*0.5f, WIDTH), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
+    buttons[0] = Button("Generate maze (Prim's)", labelFont, sf::Vector2f(0.0f, WIDTH), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
     buttons[0].action_generate = &RandomizedPrims;
+    buttons[1] = Button("Solve maze", labelFont, sf::Vector2f((float)WIDTH*0.5f, WIDTH), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
     buttons[1].action_solve = &DepthFirstSearch;
+    buttons[2] = Button("Change generation algorithm", labelFont, sf::Vector2f(0.0f, WIDTH + 50.0f), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
+    buttons[2].action_change_gen = &CycleGenAlgorithm;
 
     while(window.isOpen())
     {
@@ -66,11 +68,13 @@ int main()
                     // AABB collision
                     if(mousePos.x > origin.x && mousePos.x < origin.x + end.x && mousePos.y > origin.y && mousePos.y < origin.y + end.y)
                     {
-                        printf("%s\n", b.label.getString().toAnsiString().c_str());
+                        printf("%s\n", b.label.getString().toAnsiString().c_str()); // Debug text
                         if(b.action_generate != nullptr)
                             currentMaze = b.action_generate(mazeSize, mazeImage, window);
                         else if(b.action_solve != nullptr)
                             b.action_solve(currentMaze, mazeImage, window);
+                        else if(b.action_change_gen != nullptr)
+                            b.action_change_gen(buttons, buttonCount);
 
                         mazeTexture.loadFromImage(mazeImage);
                         sf::Sprite temp(mazeTexture);
