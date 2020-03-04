@@ -1,28 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include "maze.h"
-
-struct Button
-{
-    sf::RectangleShape background;
-    sf::Text label;
-
-    // Function pointer to the function that's called on click
-    Maze (*action_generate)(int size, sf::Image& image, sf::RenderWindow& window) = nullptr;
-    void (*action_solve)(Maze& maze, sf::Image& image, sf::RenderWindow& window) = nullptr;
-
-    Button() = default;
-    Button(const std::string& text, sf::Font& font, const sf::Vector2f& pos, const sf::Vector2f& dimensions, float padding = 5.0f)
-    {
-        label = sf::Text(text, font);
-        label.setFillColor(sf::Color::White);
-        label.setPosition(pos + sf::Vector2f(padding, padding));
-
-        background = sf::RectangleShape(dimensions - sf::Vector2f(2*padding, 2*padding));
-        background.setPosition(pos + sf::Vector2f(padding, padding));
-        background.setFillColor(sf::Color(51,51,51,255));
-    }
-};
+#include "button.h"
 
 int main()
 {
@@ -30,23 +9,27 @@ int main()
 
     const int WIDTH = 800;
     const int HEIGHT = WIDTH + 200;
-    
+
     int mazeSize;
-    printf("Enter maze size (odd number): ");
+    printf("Enter maze size: ");
     if(scanf("%d", &mazeSize) == 0)
     {
         printf("Failed to read maze size!\n");
         return -1;
     }
     mazeSize += !(mazeSize % 2);
-    printf("Maze size: %d\n", mazeSize);
+    printf("Actual maze size (odd number): %d\n", mazeSize);
 
+    // Window creation
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Mazes", sf::Style::Close);
+    window.setFramerateLimit(30);
+
     Maze currentMaze(mazeSize);    // TEMP
        
     sf::Image mazeImage;
     mazeImage.create(mazeSize, mazeSize, sf::Color::Red);
 
+    sf::Image test;
     sf::Texture mazeTexture;
     mazeTexture.loadFromImage(mazeImage);
 
