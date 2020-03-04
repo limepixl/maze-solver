@@ -1,5 +1,4 @@
 #include <SFML/Graphics.hpp>
-#include <string>
 #include "maze.h"
 #include "button.h"
 
@@ -24,10 +23,11 @@ int main()
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Mazes", sf::Style::Close);
     window.setFramerateLimit(30);
 
-    Maze currentMaze(mazeSize);    // TEMP
+    // Used to store generated maze
+    Maze currentMaze;
        
     sf::Image mazeImage;
-    mazeImage.create(mazeSize, mazeSize, sf::Color::Red);
+    mazeImage.create(mazeSize, mazeSize, sf::Color::Black);
 
     sf::Image test;
     sf::Texture mazeTexture;
@@ -68,7 +68,6 @@ int main()
                     // AABB collision
                     if(mousePos.x > origin.x && mousePos.x < origin.x + end.x && mousePos.y > origin.y && mousePos.y < origin.y + end.y)
                     {
-                        printf("%s\n", b.label.getString().toAnsiString().c_str()); // Debug text
                         if(b.action_generate != nullptr)
                             currentMaze = b.action_generate(mazeSize, mazeImage, window);
                         else if(b.action_solve != nullptr)

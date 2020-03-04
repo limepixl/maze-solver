@@ -14,6 +14,11 @@ struct Neighbor
     Direction dir;
 };
 
+Maze::Maze()
+{
+    size = 0;
+}
+
 Maze::Maze(int size) : size(size)
 {
 	maze.reserve(size*size);
@@ -263,6 +268,13 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
     
 void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
 {
+    // If there isn't a generated maze yet, do nothing
+    if(!m.size)
+    {
+        printf("You need to generate a maze first.\n");
+        return;
+    }
+
     int size = m.size;
     int startX = m.startX;
     int endX = m.endX;

@@ -24,6 +24,7 @@ struct Maze
     int startX, endX;
 	std::vector<Cell> maze;
 	
+    Maze();
 	Maze(int size);
     
     void GenerateMazeData();
