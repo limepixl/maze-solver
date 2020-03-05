@@ -52,7 +52,8 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
     std::vector<Cell>& cellmaze = maze.maze;
 
     int stackIndex = 0;
-    Cell* pathStack[size*size];
+    std::vector<Cell*> pathStack;
+    pathStack.reserve(size*size);
     pathStack[0] = &cellmaze[startX + size];
 
     sf::Texture tex;
@@ -160,7 +161,8 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
     float scaleRatio = (float)window.getSize().x / size;
 
     int wallIndex = 0;
-    Neighbor wallList[size*size];
+    std::vector<Neighbor> wallList;
+    wallList.reserve(size*size);
 
     cellmaze[startX].isWall = false;
 
@@ -218,7 +220,7 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
             image.setPixel(randomWall->cell->x, randomWall->cell->y, sf::Color::White);
 
             // Avoiding C++ features while still using lambdas :^)
-            auto contains = [](Neighbor* neighbors, int size, Cell* cell)
+            auto contains = [](std::vector<Neighbor>& neighbors, int size, Cell* cell)
             {
                 bool res = false;
                 for(int i = 0; i < size; i++)
@@ -293,7 +295,8 @@ void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
     }
 
     int stackIndex = 0;
-    Cell* pathStack[size*size];
+    std::vector<Cell*> pathStack;
+    pathStack.reserve(size*size);
     pathStack[0] = &m.maze[startX];
 
     Cell* current = pathStack[stackIndex];
