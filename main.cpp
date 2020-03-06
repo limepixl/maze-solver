@@ -36,7 +36,7 @@ int main()
     sf::Sprite mazeSprite(mazeTexture);
     mazeSprite.scale((float)WIDTH / mazeSize, (float)WIDTH / mazeSize);
 
-    // Path depends on executable path
+    // Path depends on executable path. MIGHT NEED TO CHANGE
     sf::Font labelFont;
     labelFont.loadFromFile("../maze-solver/source-sans-pro/SourceSansPro-Regular.otf");
     float padding = 5.0f;
