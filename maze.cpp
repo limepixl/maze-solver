@@ -57,10 +57,9 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
     int startX = maze.startX;
     std::vector<Cell>& cellmaze = maze.maze;
 
-    int stackIndex = 0;
     std::vector<Cell*> pathStack;
     pathStack.reserve(size*size);
-    pathStack[0] = &cellmaze[startX + size];
+    pathStack.push_back(&cellmaze[startX + size]);
 
     sf::Texture tex;
     sf::Sprite mazeSprite;
@@ -88,7 +87,7 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
         }
         window.clear(sf::Color::Blue);
 
-        Cell* current = pathStack[stackIndex];
+        Cell* current = pathStack.back();
 
         int nCount = 0;
         Neighbor neighbors[4];
@@ -109,9 +108,10 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
         // No neighbors
         if(nCount == 0)
         {
-            current = pathStack[--stackIndex];
+            pathStack.pop_back();
+            current = pathStack.back();
 
-            if(stackIndex == 0)
+            if(pathStack.size() == 0)
                 break;
 
             continue;
@@ -134,8 +134,8 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
         cellToAdd->isWall = false;
         image.setPixel(cellToAdd->x, cellToAdd->y, sf::Color::White);
 
-        pathStack[++stackIndex] = neighbors[r].cell;
-        current = pathStack[stackIndex];
+        pathStack.push_back(neighbors[r].cell);
+        current = pathStack.back();
 
         // Store image in texture (transition to sprite)
         tex.loadFromImage(image);
@@ -166,7 +166,6 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
     sf::Sprite mazeSprite;
     float scaleRatio = (float)window.getSize().x / size;
 
-    int wallIndex = 0;
     std::vector<Neighbor> wallList;
     wallList.reserve(size*size);
 
@@ -177,9 +176,9 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
     start->isWall = false;
 
     // Add start walls to wall list
-    if(start->x > 2) wallList[wallIndex++] = {&cellmaze[start->x - 1 + size], LEFT};
-    if(start->x < size - 2) wallList[wallIndex++] = {&cellmaze[start->x + 1 + size], RIGHT};
-    wallList[wallIndex++] = {&cellmaze[start->x + 2*size], DOWN};
+    if(start->x > 2) wallList.push_back({&cellmaze[start->x - 1 + size], LEFT});
+    if(start->x < size - 2) wallList.push_back({&cellmaze[start->x + 1 + size], RIGHT});
+    wallList.push_back({&cellmaze[start->x + 2*size], DOWN});
 
     // Initial draw
     for(int i = 0; i < size; i++)
@@ -190,7 +189,7 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
     }
 
     window.setFramerateLimit(0);
-    while(wallIndex != 0)
+    while(wallList.size() != 0)
     {
         sf::Event e;
         while(window.pollEvent(e))
@@ -203,7 +202,7 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
         }
         window.clear(sf::Color::Blue);
 
-        int randomWallIndex = rand() % wallIndex;
+        int randomWallIndex = rand() % wallList.size();
         Neighbor* randomWall = &wallList[randomWallIndex];
 
         // Offset to get the cell in the neighbor direction
@@ -226,11 +225,11 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
             image.setPixel(randomWall->cell->x, randomWall->cell->y, sf::Color::White);
 
             // Avoiding C++ features while still using lambdas :^)
-            auto contains = [](std::vector<Neighbor>& neighbors, int size, Cell* cell)
+            auto contains = [](std::vector<Neighbor>& neighbors, Cell* cell)
             {
                 bool res = false;
-                for(int i = 0; i < size; i++)
-                if(neighbors[i].cell == cell)
+                for(auto& n : neighbors)
+                if(n.cell == cell)
                 {
                     res = true;
                     break;
@@ -240,20 +239,18 @@ Maze RandomizedPrims(int size, sf::Image &image, sf::RenderWindow &window)
             };
 
             // Add neighboring walls of newly added cell to the wall list
-            if(cellToMark->x < size - 2 && cellmaze[cellToMark->x + 1 + cellToMark->y*size].isWall && !contains(wallList, wallIndex, &cellmaze[cellToMark->x + 1 + cellToMark->y*size]))
-                wallList[wallIndex++] = {&cellmaze[cellToMark->x + 1 + cellToMark->y*size], RIGHT};
-            if(cellToMark->x > 2 && cellmaze[cellToMark->x - 1 + cellToMark->y*size].isWall && !contains(wallList, wallIndex, &cellmaze[cellToMark->x - 1 + cellToMark->y*size]))
-                wallList[wallIndex++] = {&cellmaze[cellToMark->x - 1 + cellToMark->y*size], LEFT};
-            if(cellToMark->y < size - 2 && cellmaze[cellToMark->x + cellToMark->y*size + size].isWall && !contains(wallList, wallIndex, &cellmaze[cellToMark->x + size + cellToMark->y*size]))
-                wallList[wallIndex++] = {&cellmaze[cellToMark->x + cellToMark->y*size + size], DOWN};
-            if(cellToMark->y > 2 && cellmaze[cellToMark->x + cellToMark->y*size - size].isWall && !contains(wallList, wallIndex, &cellmaze[cellToMark->x - size + cellToMark->y*size]))
-                wallList[wallIndex++] = {&cellmaze[cellToMark->x + cellToMark->y*size - size], UP};
+            if(cellToMark->x < size - 2 && cellmaze[cellToMark->x + 1 + cellToMark->y*size].isWall && !contains(wallList, &cellmaze[cellToMark->x + 1 + cellToMark->y*size]))
+                wallList.push_back({&cellmaze[cellToMark->x + 1 + cellToMark->y*size], RIGHT});
+            if(cellToMark->x > 2 && cellmaze[cellToMark->x - 1 + cellToMark->y*size].isWall && !contains(wallList, &cellmaze[cellToMark->x - 1 + cellToMark->y*size]))
+                wallList.push_back({&cellmaze[cellToMark->x - 1 + cellToMark->y*size], LEFT});
+            if(cellToMark->y < size - 2 && cellmaze[cellToMark->x + cellToMark->y*size + size].isWall && !contains(wallList, &cellmaze[cellToMark->x + size + cellToMark->y*size]))
+                wallList.push_back({&cellmaze[cellToMark->x + cellToMark->y*size + size], DOWN});
+            if(cellToMark->y > 2 && cellmaze[cellToMark->x + cellToMark->y*size - size].isWall && !contains(wallList, &cellmaze[cellToMark->x - size + cellToMark->y*size]))
+                wallList.push_back({&cellmaze[cellToMark->x + cellToMark->y*size - size], UP});
         }
 
         // Overwrite current wall in list with last wall
-        // (This is only necessary because I am trying to
-        // avoid the C++ STL, and using C style arrays.)
-        wallList[randomWallIndex] = wallList[--wallIndex];
+        wallList.erase(wallList.begin() + randomWallIndex);
 
         // Store image in texture (transition to sprite)
         tex.loadFromImage(image);
@@ -300,12 +297,11 @@ void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
         image.setPixel(j, i, (currentCell.isWall ? sf::Color::Black : sf::Color::White));
     }
 
-    int stackIndex = 0;
     std::vector<Cell*> pathStack;
     pathStack.reserve(size*size);
-    pathStack[0] = &m.maze[startX];
+    pathStack.push_back(&m.maze[startX]);
 
-    Cell* current = pathStack[stackIndex];
+    Cell* current = pathStack.back();
     Cell* start = &m.maze[startX];
     Cell* end = &m.maze[endX + size*size - size];
 
@@ -349,18 +345,19 @@ void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
 
         if(nCount == 0)
         {
-            if(stackIndex == 0)
+            if(pathStack.size() == 0)
                 break;
 
             image.setPixel(current->x, current->y, sf::Color::White);
             current->solution = false;
-            current = pathStack[--stackIndex];
+            pathStack.pop_back();
+            current = pathStack.back();
             continue;
         }
 
         int r = rand() % nCount;
         current = neighbors[r].cell;
-        pathStack[++stackIndex] = current;
+        pathStack.push_back(current);
 
         // Color in the solution path
         image.setPixel(current->x, current->y, sf::Color::Red);
@@ -386,7 +383,6 @@ void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
     window.setFramerateLimit(30);
 }
 
-// TODO: Indices on vectors should go
 // TODO: Improve because it isn't that efficient
 void BreadthFirstSearch(Maze &m, sf::Image &image, sf::RenderWindow &window)
 {
@@ -497,4 +493,6 @@ void BreadthFirstSearch(Maze &m, sf::Image &image, sf::RenderWindow &window)
         window.draw(mazeSprite);
         window.display();
     }
+
+    window.setFramerateLimit(30);
 }
