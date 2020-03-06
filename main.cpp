@@ -46,7 +46,7 @@ int main()
     buttons[0] = Button("Generate maze (Prim's)", labelFont, sf::Vector2f(0.0f, WIDTH), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
     buttons[0].action_generate = &RandomizedPrims;
     buttons[1] = Button("Solve maze", labelFont, sf::Vector2f((float)WIDTH*0.5f, WIDTH), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
-    buttons[1].action_solve = &DepthFirstSearch;
+    buttons[1].action_solve = &BreadthFirstSearch;
     buttons[2] = Button("Change generation algorithm", labelFont, sf::Vector2f(0.0f, WIDTH + 50.0f), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
     buttons[2].action_change_gen = &CycleGenAlgorithm;
 

@@ -14,6 +14,12 @@ struct Neighbor
     Direction dir;
 };
 
+struct BacktrackingNeighbor
+{
+    Cell* cell;
+    Cell* lastCell;
+};
+
 Maze::Maze()
 {
     size = 0;
@@ -378,4 +384,117 @@ void DepthFirstSearch(Maze& m, sf::Image& image, sf::RenderWindow& window)
     printf("Finished solving maze!\n");
 
     window.setFramerateLimit(30);
+}
+
+// TODO: Indices on vectors should go
+// TODO: Improve because it isn't that efficient
+void BreadthFirstSearch(Maze &m, sf::Image &image, sf::RenderWindow &window)
+{
+    // If there isn't a generated maze yet, do nothing
+    if(!m.size)
+    {
+        printf("You need to generate a maze first.\n");
+        return;
+    }
+
+    int size = m.size;
+    int startX = m.startX;
+    int endX = m.endX;
+
+    // Reset everything if solving for second time
+    for(int i = 0; i < m.size*size; i++)
+    {
+        m.maze[i].solution = false;
+        m.maze[i].visited = false;
+    }
+    for(int i = 0; i < size; i++)
+    for(int j = 0; j < size; j++)
+    {
+        Cell& currentCell = m.maze[j+i*size];
+        image.setPixel(j, i, (currentCell.isWall ? sf::Color::Black : sf::Color::White));
+    }
+
+    Cell* start = &m.maze[startX];
+    Cell* end = &m.maze[endX + size*size - size];
+    Cell* current = start;
+    image.setPixel(current->x, current->y, sf::Color::Blue);
+
+    int queueIndex = 1;
+    std::vector<BacktrackingNeighbor> queue;
+    queue.reserve(size*size);
+    queue.push_back({start, nullptr});
+
+    sf::Texture tex;
+    sf::Sprite mazeSprite;
+    float scaleRatio = (float)window.getSize().x / size;
+
+    window.setFramerateLimit(0);
+    while(true)
+    {
+        sf::Event e;
+        while(window.pollEvent(e))
+        {
+            if(e.type == sf::Event::Closed)
+            {
+                window.close();
+                exit(-1);
+            }
+        }
+        window.clear(sf::Color::Blue);
+
+        if(!m.maze[current->x - 1 + current->y*size].isWall && !m.maze[current->x - 1 + current->y*size].visited)
+            queue.push_back({&m.maze[current->x - 1 + current->y * size], current});
+        if(!m.maze[current->x + current->y*size + size].isWall && !m.maze[current->x + current->y*size + size].visited)
+            queue.push_back({&m.maze[current->x + current->y*size + size], current});
+        if(!m.maze[current->x + 1 + current->y*size].isWall && !m.maze[current->x + 1 + current->y*size].visited)
+            queue.push_back({&m.maze[current->x + 1 + current->y*size], current});
+        if(current != start && !m.maze[current->x + current->y*size - size].isWall && !m.maze[current->x + current->y*size - size].visited)
+            queue.push_back({&m.maze[current->x + current->y*size - size], current});
+
+        current->visited = true;
+        current = queue[queueIndex++].cell;
+        image.setPixel(current->x, current->y, sf::Color::Blue);
+
+        if(current == end)
+        {
+            current->solution = true;
+            for(BacktrackingNeighbor& last = queue[queueIndex-1]; last.cell != start;)
+            {
+                Cell* lastCell = last.lastCell;
+
+                for(size_t j = queue.size(); ; j--)
+                if(queue[j].cell == lastCell)
+                {
+                    lastCell->solution = true;
+                    last = queue[j];
+                    break;
+                }
+            }
+
+            for(int i = 0; i < size; i++)
+            for(int j = 0; j < size; j++)
+            if(image.getPixel(j, i) == sf::Color::Blue)
+            {
+                if(m.maze[j+i*size].solution)
+                    image.setPixel(j, i, sf::Color::Red);
+                else
+                    image.setPixel(j, i, sf::Color::White);
+            }
+
+            printf("Finished solving maze!\n");
+            image.saveToFile("solved.png");
+
+            break;
+        }
+
+        // Store image in texture (transition to sprite)
+        tex.loadFromImage(image);
+
+        // Create sprite from texture
+        mazeSprite = sf::Sprite(tex);
+        mazeSprite.scale(scaleRatio, scaleRatio);
+
+        window.draw(mazeSprite);
+        window.display();
+    }
 }

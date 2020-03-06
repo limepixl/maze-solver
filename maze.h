@@ -36,3 +36,4 @@ Maze RandomizedPrims(int size, sf::Image& image, sf::RenderWindow& window);
 
 // Solving algorithms
 void DepthFirstSearch(Maze& maze, sf::Image& image, sf::RenderWindow& window);
+void BreadthFirstSearch(Maze& maze, sf::Image& image, sf::RenderWindow& window);
