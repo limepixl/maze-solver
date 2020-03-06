@@ -37,3 +37,29 @@ void CycleGenAlgorithm(Button* buttons, int size)
         }
     }
 }
+
+void CycleSolveAlgorithm(Button *buttons, int size)
+{
+    // Change solving algorithm on click
+    // NOTE: Not using a map because I don't
+    // plan to have many algorithms
+    for(int i = 0; i < size; i++)
+    {
+        Button& b = buttons[i];
+        if(b.action_solve != nullptr)
+        {
+            if(b.action_solve == &DepthFirstSearch)
+            {
+                b.action_solve = &BreadthFirstSearch;
+                b.label.setString(sf::String("Solve maze (Breadth First))"));
+            }
+            else if(b.action_solve == &BreadthFirstSearch)
+            {
+                b.action_solve = &DepthFirstSearch;
+                b.label.setString(sf::String("Solve maze (Depth First)"));
+            }
+
+            break;
+        }
+    }
+}

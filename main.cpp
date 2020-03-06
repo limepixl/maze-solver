@@ -43,12 +43,16 @@ int main()
 
     int buttonCount = 4;
     Button buttons[buttonCount];
-    buttons[0] = Button("Generate maze (Prim's)", labelFont, sf::Vector2f(0.0f, WIDTH), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
+
+    sf::Vector2f buttonSize((float)WIDTH*0.5f, 50.0f);
+    buttons[0] = Button("Generate maze (Prim's)", labelFont, sf::Vector2f(0.0f, WIDTH), buttonSize, padding);
     buttons[0].action_generate = &RandomizedPrims;
-    buttons[1] = Button("Solve maze", labelFont, sf::Vector2f((float)WIDTH*0.5f, WIDTH), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
-    buttons[1].action_solve = &DepthFirstSearch;
-    buttons[2] = Button("Change generation algorithm", labelFont, sf::Vector2f(0.0f, WIDTH + 50.0f), sf::Vector2f((float)WIDTH*0.5f, 50.0f), padding);
+    buttons[1] = Button("Solve maze (Breadth First)", labelFont, sf::Vector2f((float)WIDTH*0.5f, WIDTH), buttonSize, padding);
+    buttons[1].action_solve = &BreadthFirstSearch;
+    buttons[2] = Button("Change generation algorithm", labelFont, sf::Vector2f(0.0f, WIDTH + 50.0f), buttonSize, padding);
     buttons[2].action_change_gen = &CycleGenAlgorithm;
+    buttons[3] = Button("Change solving algorithm", labelFont, sf::Vector2f((float)WIDTH*0.5f, WIDTH + 50.0f), buttonSize, padding);
+    buttons[3].action_change_solve = CycleSolveAlgorithm;
 
     while(window.isOpen())
     {
@@ -74,6 +78,8 @@ int main()
                             b.action_solve(currentMaze, mazeImage, window);
                         else if(b.action_change_gen != nullptr)
                             b.action_change_gen(buttons, buttonCount);
+                        else
+                            b.action_change_solve(buttons, buttonCount);
 
                         mazeTexture.loadFromImage(mazeImage);
                         sf::Sprite temp(mazeTexture);
