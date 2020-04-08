@@ -42,12 +42,14 @@ void Maze::GenerateMazeData()
     for(int i = 0; i < size; i++)
     for(int j = 0; j < size; j++)
     {            
-        maze[j + i*size] = Cell(j, i);
+        Cell tmp(j, i);
         
         if(i == 0 && j == startX)
-            maze[j + i*size].isWall = false;
+            tmp.isWall = false;
         else if(i == size-1 && j == endX)
-            maze[j + i*size].isWall = false;
+            tmp.isWall = false;
+     
+        maze.push_back(tmp);
     }
 }
 
@@ -109,9 +111,10 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
         if(nCount == 0)
         {
             pathStack.pop_back();
-            current = pathStack.back();
 
-            if(pathStack.size() == 0)
+            if(pathStack.size() != 0)
+                current = pathStack.back();
+            else
                 break;
 
             continue;
@@ -458,7 +461,7 @@ void BreadthFirstSearch(Maze &m, sf::Image &image, sf::RenderWindow &window)
             {
                 Cell* lastCell = last.lastCell;
 
-                for(size_t j = queue.size(); ; j--)
+                for(size_t j = queue.size()-1; ; j--)
                 if(queue[j].cell == lastCell)
                 {
                     lastCell->solution = true;
