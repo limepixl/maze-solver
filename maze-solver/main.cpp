@@ -11,7 +11,7 @@ int main()
 
     int mazeSize;
     printf("Enter maze size: ");
-    if(scanf("%d", &mazeSize) == 0)
+    if(scanf_s("%d", &mazeSize) == 0)
     {
         printf("Failed to read maze size!\n");
         return -1;
@@ -38,11 +38,11 @@ int main()
 
     // Path depends on executable path. MIGHT NEED TO CHANGE
     sf::Font labelFont;
-    labelFont.loadFromFile("../maze-solver/source-sans-pro/SourceSansPro-Regular.otf");
+    labelFont.loadFromFile("source-sans-pro/SourceSansPro-Regular.otf");
     float padding = 5.0f;
 
     int buttonCount = 4;
-    Button buttons[buttonCount];
+    Button* buttons = new Button[buttonCount];
 
     sf::Vector2f buttonSize((float)WIDTH*0.5f, 50.0f);
     buttons[0] = Button("Generate maze (Prim's)", labelFont, sf::Vector2f(0.0f, WIDTH), buttonSize, padding);
@@ -64,8 +64,9 @@ int main()
             if(e.type == sf::Event::MouseButtonPressed && e.mouseButton.button == sf::Mouse::Left)
             {
                 sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                for(auto& b : buttons)
+                for(int i = 0; i < buttonCount; i++)
                 {
+                    Button& b = buttons[i];
                     sf::Vector2f origin = b.background.getPosition();
                     sf::Vector2f end = b.background.getSize();
 
@@ -102,5 +103,6 @@ int main()
         window.display();
     }
     
+    delete[] buttons;
     return 0;
 }
