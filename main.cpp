@@ -41,7 +41,8 @@ int main()
     labelFont.loadFromFile("../maze-solver/source-sans-pro/SourceSansPro-Regular.otf");
     float padding = 5.0f;
 
-    Button buttons[4];
+    int buttonCount = 4;
+    Button buttons[buttonCount];
 
     sf::Vector2f buttonSize((float)WIDTH*0.5f, 50.0f);
     buttons[0] = Button("Generate maze (Prim's)", labelFont, sf::Vector2f(0.0f, WIDTH), buttonSize, padding);
@@ -76,9 +77,9 @@ int main()
                         else if(b.action_solve != nullptr)
                             b.action_solve(currentMaze, mazeImage, window);
                         else if(b.action_change_gen != nullptr)
-                            b.action_change_gen(buttons, 4);
+                            b.action_change_gen(buttons, buttonCount);
                         else
-                            b.action_change_solve(buttons, 4);
+                            b.action_change_solve(buttons, buttonCount);
 
                         mazeTexture.loadFromImage(mazeImage);
                         sf::Sprite temp(mazeTexture);
@@ -91,7 +92,7 @@ int main()
 
         window.clear(sf::Color::Blue);
 
-        for(int i = 0; i < 4; i++)
+        for(int i = 0; i < buttonCount; i++)
         {
             window.draw(buttons[i].background);
             window.draw(buttons[i].label);
