@@ -27,7 +27,7 @@ Maze::Maze()
 
 Maze::Maze(int size) : size(size)
 {
-	maze.reserve(size*size);
+    maze.resize(size*size);
 	GenerateMazeData();
 }
 
@@ -42,12 +42,12 @@ void Maze::GenerateMazeData()
     for(int i = 0; i < size; i++)
     for(int j = 0; j < size; j++)
     {            
-        maze[j + i*size] = Cell(j, i);
+        size_t index = size_t(j + i*size);
         
-        if(i == 0 && j == startX)
-            maze[j + i*size].isWall = false;
-        else if(i == size-1 && j == endX)
-            maze[j + i*size].isWall = false;
+        maze[index] = Cell(j, i);
+
+        if((i == 0 && j == startX) || (i == size-1 && j == endX))
+            maze[index].isWall = false;
     }
 }
 
@@ -63,7 +63,7 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
 
     sf::Texture tex;
     sf::Sprite mazeSprite;
-    float scaleRatio = (float)window.getSize().x / size;
+    float scaleRatio = float(window.getSize().x) / size;
 
     // Initial draw
     for(int i = 0; i < size; i++)
@@ -109,9 +109,10 @@ Maze DepthFirstGen(int size, sf::Image& image, sf::RenderWindow& window)
         if(nCount == 0)
         {
             pathStack.pop_back();
-            current = pathStack.back();
 
-            if(pathStack.size() == 0)
+            if(pathStack.size() != 0)
+                current = pathStack.back();
+            else
                 break;
 
             continue;
@@ -458,7 +459,7 @@ void BreadthFirstSearch(Maze &m, sf::Image &image, sf::RenderWindow &window)
             {
                 Cell* lastCell = last.lastCell;
 
-                for(size_t j = queue.size(); ; j--)
+                for(size_t j = queue.size()-1; ; j--)
                 if(queue[j].cell == lastCell)
                 {
                     lastCell->solution = true;
