@@ -2,3 +2,5 @@ CMakeLists.txt.user
 /.vs/maze-solver/v16
 /maze-solver/x64/Debug
 /x64/Debug
+.vscode
+build
