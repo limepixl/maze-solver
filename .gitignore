@@ -4,3 +4,4 @@ CMakeLists.txt.user
 /x64/Debug
 .vscode
 build
+.vs

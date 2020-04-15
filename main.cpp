@@ -38,7 +38,11 @@ int main()
 
     // Path depends on executable path. MIGHT NEED TO CHANGE
     sf::Font labelFont;
-    labelFont.loadFromFile("source-sans-pro/SourceSansPro-Regular.otf");
+#ifdef _WIN32
+    labelFont.loadFromFile("../../../source-sans-pro/SourceSansPro-Regular.otf");
+#else
+    labelFont.loadFromFile("../source-sans-pro/SourceSansPro-Regular.otf");
+#endif
     float padding = 5.0f;
 
     int buttonCount = 4;
