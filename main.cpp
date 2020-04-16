@@ -41,7 +41,7 @@ int main()
 #ifdef _WIN32
     labelFont.loadFromFile("../../../source-sans-pro/SourceSansPro-Regular.otf");
 #else
-    labelFont.loadFromFile("../source-sans-pro/SourceSansPro-Regular.otf");
+    labelFont.loadFromFile("../maze-solver/source-sans-pro/SourceSansPro-Regular.otf");
 #endif
     float padding = 5.0f;
 
