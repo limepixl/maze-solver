@@ -11,7 +11,11 @@ int main()
 
     int mazeSize;
     printf("Enter maze size: ");
+#ifdef _WIN32
+    if(scanf_s("%d", &mazeSize) == 0)
+#else
     if(scanf("%d", &mazeSize) == 0)
+#endif
     {
         printf("Failed to read maze size!\n");
         return -1;
