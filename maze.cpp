@@ -27,7 +27,7 @@ Maze::Maze()
 
 Maze::Maze(int size) : size(size)
 {
-    maze.resize(size*size);
+    maze.reserve(size*size);
 	GenerateMazeData();
 }
 
@@ -44,7 +44,7 @@ void Maze::GenerateMazeData()
     {            
         size_t index = size_t(j + i*size);
         
-        maze[index] = Cell(j, i);
+        maze.push_back(Cell(j, i));
 
         if((i == 0 && j == startX) || (i == size-1 && j == endX))
             maze[index].isWall = false;
